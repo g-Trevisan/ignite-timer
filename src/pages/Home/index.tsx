@@ -15,7 +15,7 @@ import { useState } from "react";
 
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Validação Zod - Informe a tarefa'),
-  MinutesAmount: zod
+  minutesAmount: zod
     .number()
     .min(5,'O ciclo precisa ser de no mínimo 5 minutos')
     .max(60,'O ciclo precisa ser de no máximo 60 minutos')
@@ -28,9 +28,19 @@ const newCycleFormValidationSchema = zod.object({
 
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 
+interface Cycle {
+  id: string;
+  task: string;
+  minutesAmount: number;
+
+}
+
 export function Home() {
 
-  const { register, handleSubmit, watch, reset } = useForm<newCycleFormData>({
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+
+  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
       task: '',
@@ -39,10 +49,24 @@ export function Home() {
   })
 
   function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data)
+    // console.log(data)
+
+    const id = String(new Date().getTime());
+
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+    }
+
+    setCycles((state) => [...cycles, newCycle]) //adiciona os ciclos concatenando com os anteriores
+    setActiveCycleId(id)
+
     reset() //reseta os valores para o padrao definido anteriormente no defaultvalues
   }
 
+  const activeCycle = cycles.find(cycle => cycle.id === activeCycleId)
+  console.log(activeCycle)
 
   const task = watch('task')
   const isSubmitDisabled = !task
